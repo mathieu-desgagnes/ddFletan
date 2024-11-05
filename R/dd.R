@@ -1,56 +1,7 @@
-runDD <- function(annee.courante=2023) {
-  require('RTMB')
-  #
-  load(file.path('input_dd.RData'), verbose=1)
-  #
-  anneesFittees <- 1983:2023
-  donnee <- calculerDonnee(donneeInit=donneeInit, annees=anneesFittees, valM=0.125, valTR=0.8, Rmin=18000, anOmega.min=1998, RobsSigma.unique=FALSE,
-                           omegaSigma.unique=FALSE)
-  ## donnee$Bobs <- subset(donnee$Bobs, !(source==1&annee<8))
-  ## donnee$omegaK$valeur <- donnee$omegaK$valeur*1.15
-  ##
-  param <- calculerParam(donnee, logSigma_C=log(0.05))
-  ##
-  randomVal <- c('logRpred','logBpred')
-  ## randomVal <- c('logRpred','logBpred','transTauxExp')
-  ##
-  mapVal <- list(logSigma_C=factor(NA), logSigma_longAge=factor(NA))
-  mapVal <- list(logSigma_C=factor(NA))
-  ## mapVal <- NULL
-  ##
-  obj <- MakeADFun(fnll, param, random=randomVal, map=mapVal)
-  ##
-  ## fit <- nlminb(obj$par, obj$fn, obj$gr)
-  fit <- nlminb(obj$par, obj$fn, obj$gr, control = list(eval.max=100000000, iter.max=100000000))
-  fit
-  ##
-  sdr <- sdreport(obj)
-  pl <- as.list(sdr, "Est")
-  plsd <- as.list(sdr, "Std")
-  ##
-  tacProj <- NA; fProj <- NA
-  ##
-  ## pdf(file='test.pdf', width=14, height=8.5)
-  ## objReport=obj$report()
-  par(mfcol=c(3,5), mar=c(4,4,0,1)+0.1)
-  ylimLog <- c(-3.1,3.1)
-  graph.B(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, ylimLog=ylimLog, ajouterProc=TRUE, pl=pl, plsd=plsd)
-  graph.R(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, ylimLog=ylimLog, pl=pl, plsd=plsd)
-  ## graph.kobe(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
-  graph.omega(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, ylimLog=ylimLog)
-  graph.N(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
-  graph.C(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
-  graph.F(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, pl=pl, plsd=plsd)
-  graph.retourTag(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
-  ## graph.SSR(donnee, param, obj$report(), msyVal=NULL, langue='fr')
-  ## graph.ageLong(donnee, param, obj$report(), msyVal=NULL, langue='fr')
-  sdr
-}
-
 fnll <- function(param, fit=TRUE){
   getAll(param, donnee)
   ##
-  ## \U{00E9}cart-type des fonctions vraissemblances
+  ## Ecart-type des fonctions vraissemblances
   sigma_Bobs <- exp(logSigma_Bobs)
   sigma_Bproc <- exp(logSigma_Bproc)
   sigma_oBar <- exp(logSigma_oBar)
@@ -62,15 +13,15 @@ fnll <- function(param, fit=TRUE){
   ##
   Bobs <- OBS(Bobs)
   ##
-  ## Param\U{00E8}tres variables dans le temps
-  Bpred <- exp(logBpred) #Bpred inclus B0, donc donc commence \U{00E0} l'an 0
+  ## Parametres variables dans le temps
+  Bpred <- exp(logBpred) #Bpred inclus B0, donc donc commence a l'an 0
   Rpred <- exp(logRpred)
   tauxExp <- 0.001 + 0.9*plogis(transTauxExp) # entre 0.001 et 0.9
   F <- -log(1-tauxExp)
   Z <- F+M
-  s <- exp(-M) * (1-tauxExp) #\U{00E9}quivalent \U{00E0} exp(-Z)
+  s <- exp(-M) * (1-tauxExp) #equivalent a exp(-Z)
   ##
-  ## Param\U{00E8}tres invariables dans le temps
+  ## Parametres invariables dans le temps
   N0 <- exp(logN0)
   qRel <- c(2*plogis(transQrelGSL), 2*plogis(transQrelAutre))
   qRecru <- 2*plogis(transRapportQrecru) * qRel[1] #par rapport au q des adultes
@@ -79,7 +30,7 @@ fnll <- function(param, fit=TRUE){
   K <- exp(logK)
   t0 <- -5 + 10*plogis(transT0) #entre -5 et 5
   ##
-  ## calcul des param\U{00E8}tre du graphique Ford-Walford (rho et alpha), selon l'\U{00E9}tendue des longueurs moyennes observ\U{00E9}s
+  ## calcul des parametre du graphique Ford-Walford (rho et alpha), selon l'etendue des longueurs moyennes observes
   poidsMoyMin <- min(omega$valeur)
   ageMin <- log(1-((poidsMoyMin/lpAlpha)^(1/lpBeta))/linf) / -K + t0
   poidsMoyMin.plus1an <- lpAlpha * (linf * (1-exp(-K * ((ageMin+1)-t0))))^lpBeta
@@ -94,12 +45,12 @@ fnll <- function(param, fit=TRUE){
   ## rho <- (poidsMoyMin.plus1an - winf) / (poidsMoyMin - winf)
   ## alpha <- winf*(1 - rho)
   ##
-  ## Initialisation \U{00E0} l'an 1
+  ## Initialisation a l'an 1
   Bpred.proc <- s[1] * alpha * N0 +
-    s[1] * rho * Bpred[1] + #Bpred commence \U{00E0} l'an 0
+    s[1] * rho * Bpred[1] + #Bpred commence a l'an 0
     omegaK[1,'valeur'] * Rpred[1]
   Npred <- s[1] * N0 + Rpred[1]
-  Cpred <- tauxExp[1] * Bpred[1] * exp(-M) #p\U{00EA}che apr\U{00E8}s mortalit\U{00E9} naturelle
+  Cpred <- tauxExp[1] * Bpred[1] * exp(-M) #peche apres mortalite naturelle
   ##
   ## Progression annuelle
   for(i in 2:(length(Bpred)-1)){
@@ -107,21 +58,21 @@ fnll <- function(param, fit=TRUE){
       s[i] * rho * Bpred[i] +
       omegaK[i,'valeur'] * Rpred[i]
     Npred[i] <- s[i] * Npred[i-1] + Rpred[i]
-    Cpred[i] <- tauxExp[i] * Bpred[i] * exp(-M) #p\U{00EA}che apr\U{00E8}s mortalit\U{00E9} naturelle
-    if(i==a2010){ # ajuster la biomasse pour le changement de taille l\U{00E9}gale en 2010
+    Cpred[i] <- tauxExp[i] * Bpred[i] * exp(-M) #peche apres mortalite naturelle
+    if(i==a2010){ # ajuster la biomasse pour le changement de taille legale en 2010
       Bpred.proc[i] <- Bpred.proc[i] * drop2010
-      ## soustraction du nombre de poisson en moins, selon la biomasse soustraite et le poids moyen \U{00E0} cette taille
+      ## soustraction du nombre de poisson en moins, selon la biomasse soustraite et le poids moyen a cette taille
       Npred[i] <- Npred[i] - Bpred.proc[i] * (1-drop2010) / poidsMoy81a85
     }
   }
   omegaPred <- tail(Bpred,-1)/Npred
   ##
-  ## suivi des tags pr\U{00E9}sents dans l'eau et recaptur\U{00E9}s
+  ## suivi des tags presents dans l'eau et recaptures
   nTag <- matrix(nrow=length(Bpred)-1, ncol=length(Bpred)-1)
-  nTagRetourPred <- matrix(NA, nrow=length(Bpred)-1, ncol=length(Bpred)-1) #pas de captures l'ann\U{00E9}e de marquage
+  nTagRetourPred <- matrix(NA, nrow=length(Bpred)-1, ncol=length(Bpred)-1) #pas de captures l'annee de marquage
   for(i in 1:(nrow(nTag)-1)){
     nTag[i,i] <- nTagsPoses$valeur[i] * sPostMarquage
-    for(j in (i+1):ncol(nTag)){ #remplir le triangle sup\U{00E9}rieur
+    for(j in (i+1):ncol(nTag)){ #remplir le triangle superieur
       nTag.temp <- nTag[i,j-1] * (1-perteTag[j-1,'perteAnnuelle2tag'])
       nTag[i,j] <- nTag.temp * s[j]
       nTagRetourPred[i,j] <- nTag.temp * exp(-M) * tauxExp[j] * tauxRetour
@@ -133,10 +84,10 @@ fnll <- function(param, fit=TRUE){
   ## erreur de processus sur la biomasse, retirer le premier Bpred
   nll.Bproc <- -sum(dnorm(tail(logBpred,-1), log(Bpred.proc), sigma_Bproc, log=TRUE), na.rm=TRUE)
   ##
-  ## marche al\U{00E9}atoire walk du recrutement
+  ## marche aleatoire walk du recrutement
   nll.recru <- -sum(dnorm(log(Rpred[-length(Rpred)]), log(Rpred[-1]), sigma_Rrw, log=TRUE), na.rm=TRUE)
   ##
-  ## erreur d'ajustement de la longueur \U{00E0} l'age
+  ## erreur d'ajustement de la longueur a l'age
   nll.longAge <- -sum(dnorm(croiss$longueur, linf*(1-exp(-K*(croiss$age-t0))), sigma_longAge, log=TRUE), na.rm=TRUE)
   ##
   ## erreur d'observation sur les captures
@@ -176,7 +127,7 @@ fnll <- function(param, fit=TRUE){
     }
   }
   ##
-  ## erreur d'observation sur les retours d'\U{00E9}tiquettes
+  ## erreur d'observation sur les retours d'etiquettes
   nll.tag <- 0
   for(i in 1:nrow(nTagsRetourObs)){
     anPose <- nTagsRetourObs[i,'anneePose']

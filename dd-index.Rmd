@@ -1,0 +1,310 @@
+---
+title: "Utiliation de RTMB pour ajuster un modèle _delay-difference_ aux données du stock de flétan de l'atlantique 4RST"
+author: "Mathieu Desgagnés"
+date: "`r Sys.Date()`"
+link-citations: true
+bibliography: bib/DD.bib
+output:
+  html_document:
+    df_print: paged
+  pdf_document: null
+---
+
+# Objectif
+
+Ajuster un modèle de dynamique de population aux données de flétan de l'atlantique du Golfe du Saint-Laurent (OPANO 4RST).
+Cette implémentation d'un modèle de type _delay-difference_ est réalisée à l'aide de RTMB.
+Le modèle s'ajuste aux données des relevés au chalut du MPO du nord et du sud du golfe du Saint-Laurent, aux données du relevé à la palangre et aux poids moyens observés par les observateurs en mer et les échantillonneurs à quai.
+L'ajustement d'une courbe de croissance et le calcul des paramètre du graphique Ford-Walford est réalisé lors de l'optimisation du modèle.
+Les taux de recapture de étiquettes de flétans marqués sont intégrés au modèle.
+La référence principale est @hilborn_quantitative_1992.
+
+# Charger le package de fonctions
+```r
+library("ddFletan")
+```
+
+
+
+# Lire les données
+```r
+load(file.path('dd-input.RData'), verbose=1)
+```
+Permet d'obtenir une list() d'objets utilisés lors de l'ajustement du modèle
+
+
+# Formater les données
+```r
+anneesFittees <- 1983:2023
+donnee <- calculerDonnee(donneeInit=donneeInit, annees=anneesFittees, valM=0.125, valTR=0.8, Rmin=18000, anOmega.min=1998, RobsSigma.unique=FALSE, omegaSigma.unique=FALSE)
+## donnee$Bobs <- subset(donnee$Bobs, !(source==1&annee<8))
+## donnee$omegaK$valeur <- donnee$omegaK$valeur*1.15
+```
+
+# Formater les paramètres d'entrée
+```r
+param <- calculerParam(donnee, logSigma_C=log(0.05))
+```
+
+# Ajuster le modèle
+```r
+require('RTMB')
+  randomVal <- c('logRpred','logBpred')
+  ## randomVal <- c('logRpred','logBpred','transTauxExp')
+  ##
+  mapVal <- list(logSigma_C=factor(NA), logSigma_longAge=factor(NA))
+  mapVal <- list(logSigma_C=factor(NA))
+  ## mapVal <- NULL
+  ##
+  obj <- MakeADFun(fnll, param, random=randomVal, map=mapVal)
+  ##
+  ## fit <- nlminb(obj$par, obj$fn, obj$gr)
+  fit <- nlminb(obj$par, obj$fn, obj$gr, control = list(eval.max=100000000, iter.max=100000000))
+  fit
+```
+
+# Sorties du modèle
+```r
+  sdr <- sdreport(obj)
+  pl <- as.list(sdr, "Est")
+  plsd <- as.list(sdr, "Std")
+  ##
+  tacProj <- NA; fProj <- NA
+  ##
+  ## pdf(file='test.pdf', width=14, height=8.5)
+  ## objReport=obj$report()
+  par(mfcol=c(3,5), mar=c(4,4,0,1)+0.1)
+  ylimLog <- c(-3.1,3.1)
+  graph.B(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, ylimLog=ylimLog, ajouterProc=TRUE, pl=pl, plsd=plsd)
+  graph.R(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, ylimLog=ylimLog, pl=pl, plsd=plsd)
+  ## graph.kobe(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
+  graph.omega(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, ylimLog=ylimLog)
+  graph.N(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
+  graph.C(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
+  graph.F(donnee, param, objReport=obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj, pl=pl, plsd=plsd)
+  graph.retourTag(donnee, param, obj$report(), msyVal=NULL, langue='fr', tacProj=tacProj)
+  ## graph.SSR(donnee, param, obj$report(), msyVal=NULL, langue='fr')
+  ## graph.ageLong(donnee, param, obj$report(), msyVal=NULL, langue='fr')
+  sdr
+```
+
+
+
+
+
+
+
+
+$$  B_t = s_{t-1} * \alpha * N_{t-1} + s_{t-1} * \rho * B_{t-1} + w_k * R_t $$
+
+$$  N_t = s_{t-1} * N_{t-1} + R_t $$
+
+$$  s_t = exp(-M) * (1 - C_t/B_t) $$
+
+
+$$  \bar{w}_t = B_t / N_t $$
+
+Ces derniers identifient 3 hypothèse clés nécessaires pour qu'un modèle _delay-difference_ représente adéquatement la dynamique d'un stock.
+
+## Hypothèse 1
+
+> La croissance en poids à l'âge peut être décrite par la relation linéaire (pour les âges $a>=k$):
+
+$$
+  poids_a = \alpha + \rho \times poids_{a-1}
+$$
+Ces paramètres sont facilement interprétable à partir d'un graphique Ford-Walford, et la correspondance entre le poids et l'âge est documenté pour le flétan atlantique.
+Cette correspondance est toutefois variable selon la source d'information. 
+Nous développons en ce moment une nouvelle courbe de croissance pour le golfe du Saint-Laurent, et la relation longueur-poids y est aussi bien décrite. 
+Voir la section des donnée pour plus d'informations à ce sujet.
+
+
+## Hypothèse 2
+
+> Tous les poissons d'âge $k$ et plus sont également vulnérables à la pêche
+
+Cette hypothèse implique une sélectivité de type _knife-edge_, où les poissons d'âge $k$ et plus sont pleinement sélectionnés par les engins de pêche.
+Pour la pêche au flétan dans le GSL, la palangre est l'engin très majoritairement rencontré et la taille des hameçons utilisés permet de considérer que la sélectivité pour les taille autour de la taille minimale légale (TML) est grande. 
+Les poissons plus petits que la TML doivent être remis à l'eau et le taux de survie de ces poissons  remis à l'eau est réputé élevé. 
+Il est attendu que la sélectivité de l'engin de pêche pour les poissons de très grande taille soit plus faible. 
+
+
+## Hypothèse 3
+
+> Tous les poissons d'âge $k$ et plus ont le même taux de mortalité naturelle
+
+
+## Vraissemblance
+
+Tiré de @huynh_samtool_2022.
+
+Indicateur d'abondance:
+$$
+  L^I = \sum_t (-log(\sigma^s - 0.5[\frac{log(I_t)-log(\hat{I_t})}{\sigma^s}]^2))
+$$
+où:
+$$
+  \hat{I_t} = q_s*\hat{B_t}
+$$
+  
+
+Poids moyen:
+$$
+  L^W = \sum_t (-log(\sigma^W - 0.5[\frac{log(\bar{w_t})-log(\hat{B_t}/\hat{N_t})}{\sigma^W}]^2))
+$$
+
+Dans TMB, la fonction _dnorm_ permet de calculer les vraissemblances pour un structure d'erreur de type normal et log-normal. 
+Dans certains choix de formulation du modèle, une pénalité est ajoutée pour s'assurer que les F annuels estimés permettent pas de reproduire les captures observées. 
+
+Le modèle proposé utilise en entrée un indicateur de biomasse, un indicateur de recrutement, les captures annuelles ainsi que la taille moyenne des poissons d'âge $k$ et plus. L'âge $k$ est déterminé à partir de la courbe de croissance utilisée et de la taille où les poissons sont remis à l'eau. Les données de taille moyenne proviennent de sources différentes de celle utilisée pour les indices d'abondance et de recrue.
+
+# Résultats
+```{r casBase, fig.align='center', out.width='6.5in', fig.cap="Ajustement aux données du cas de base.", echo=FALSE, fig.pos = 'H'}
+knitr::include_graphics('figure/dd_casBase.png')
+```
+
+Dans l'ajsutement du modèle précédent (reproduisible avec le fichier fourni), la convergence est obtenue en ajustant librement les paramètre de B0 et N0, les capturabilités liées aux indices d'abondance et de recrutement ainsi que les valeurs de croissance $\alpha$ et $\rho$. 
+Dans certains cas, des bornes sont utilisées pour éviter la recherche de valeurs irréalistes.
+Si l'ajustement de ce modèle semble adéquat, la convergence du modèle est très sensible aux choix de modèles et de paramètres. 
+Des changement dans les bornes de recherche de valeurs de paramètres peuvent à elle seule amener celui-ci à ne pas converger.
+Le choix de l'année de départ est aussi influente dans la capacité de l'ajustement à converger.
+
+Parmi les choix de modélisation, notons:  
+
+ - l'année de départ
+ - l'imposition de valeurs alpha et rho issues de la littérature/laboratoire
+ - l'utilisation des débarquement comme valeur absolue VS l'estimation d'un F avec pénalité si différent de débarquement
+ - l'utilisation des observateurs à quai VS echantillonneurs en mer
+ - l'utilisation des PUE commerciales VS relevé MPO
+ - l'utilisation simulatnée des différents indicateurs (indice d'abondance et poids moyen)
+ - l'évolution de la définition de la population suivi en fonction des changements dans la taille minimale légale 
+
+\newpage
+# Données d'entrée
+
+La source des données influence l'année de départ de l'ajustement.
+L'utilisation des données de taille moyenne (observateurs en mer ou échantillonneurs à quai) suggère l'utilisation de l'année 2000 comme année minimum de départ de l'ajustement.
+
+## Taille moyenne dans la population
+
+Le suivi par les observateurs en mer et échantillonneurs à quai des captures effectuées à la palangre peut fournir un indicateur de la taille moyenne des flétans plus grands que la taille légale dans la population.
+Une taille minimale légale est en vigueur depuis 1997 et est passée de 81cm à 85cm en 2010.
+Les données d'échantillonneur à quai suivent cette TML, alors qu'un choix doit être fait dans les données des observateurs en mer quand à la taille minimale à considérer dans l'indicateur.
+Les données des relevés MPO au chalut n'ont pas été retenues pour documenter la taille moyenne d'un individus dans la population car il est supposé ici que la sélectivité de l'engin diminue rapidement avec la taille, biaisant la moyenne calculée.
+L'effet du dimorphisme sexuel et la pression de pêche potentiellement inégale entre les sexe qui en découle ne sont pas considérés dans l'analyse.
+
+
+Le relevé à la palangre permet aussi de fournir un indicateur des la taille moyenne des flétant dans la population.
+Le faible nombre d'années disponibles rend son utilisation dans l'ajustement difficile.
+Ces données pourraient toutefois servir à valider les résultats provenant des observateurs en mer et des échantillonneurs à quai.
+
+La quantité de flétans mesurés (Figure \@ref(fig:tauxCouvObsEch)) varie entre les zones opano. 
+Peu de mesures proviennent de la zone OPANO 4R, bien que des débarquements importants y soient réalisés.
+Pour les données d'observateurs en mer, les données avant 2003 sont moins nombreuses et inexistatntes avant 1996. 
+La série de données d'échantillonneurs à quai commence à partir de 1990, est disponible de façon continue depuis 1994 et généralement à 2% des débarquements ou moins avant 2012.   
+
+
+\newpage
+Pour les données d'observateur en mer, la structure de taille pour l'année 2021 présente des valeurs qui se démarquent du patron observé les années précédentes  (Figure \@ref(fig:structTailleObs)).  
+
+
+\newpage
+L'effet des années "pandémie" est moins important pour les échantillonneurs à quai (Figure \@ref(fig:structTailleEch)).  
+
+\newpage
+Généralement, les données provenant de la pêche a la palangre et récoltées par les observateurs en mer présentent une taille moyenne des poissons capturé supérieure à celles récoltées par les échantillonneurs à quai, une fois la TML prise en compte.
+Les tendances sont toutefois similaires.
+
+
+
+## Indice de biomasse
+
+Les données des relevés au chalut réalisées par le MPO sont disponibles depuis au moins le début des années 1990.
+[@yin_length-specific_2022] suggèrent l'utilisation d'un facteur de conversion pour joindre les résultats des relevés du sud et du nord du GSL, ceux-ci étant réalisé à partir d'une combinaison engin-bateau différente.
+Les données du relevé au chalut du programme sentinelle sont disponbiles depuis le milieu des années 1990 pour le nord du GSL.
+Des doutes ont été soulevés sur la capacité des relevés au chalut à capturer les flétans atlantiques de taille légale, notamment par la quasi absence de ceux-ci des captures des relevés durant les années 1990, alors que le stock soutenait une pêche commericale.
+Un facteur de capturabilité $q$ est estimé par le modèle pour mettre en relation la biomasse estimée à l'indice d'abondance.  
+
+Une pue commerciale est calculée à partir de 1998.
+Les données d'efforts nécessaires pour le calcul de cet indicateur ne sont pas disponibles pour toutes les flottilles de pêche, et cette disponiblité varie avec les années, particulièrement avant 2006.  
+
+Un relevé à la palangre visant le flétan atlantique fournit des données depuis 2017.
+La série d'indicateur fournie par ce relevé est jugée trop courte pour contribuer efficacement à l'ajustement du modèle.  
+
+
+Il a été choisi d'utiliser la biomasse minimale chalutable des flétan de 85 cm et plus dans les relevés au chalut du MPO pour l'ensemble de la série comme indicateur d'abondance. 
+Il aurait aussi été possible de modifier la taille des poissons considérés pour tenir compte de l'évolution de la TML.
+
+
+
+\newpage
+
+## Indice de recrutement
+
+Le recrutement provient des relevés au chalut du MPO.
+Le nombre minimal chalutable de flétan capturé pour une cohorte estimée (~10cm) est utilisé comme indicateur de recrutement. 
+Le modèle utilise cette valeur comme absolue, l'erreur d'observation étant propagée à l'indicateur de biomasse et à l'indicateur de taille moyenne.
+L'intervalle de taille utilisé est fixé à 10cm, mais la plage de taille couverte varie au courant des années pour suivre l'évolution de la TML.
+La croissance plus lente des mâles autour de la TLM peut faire en sorte que l'indicateur surestime l'abondence des recrues par l'inclusion de plus d'une classe d'age.
+Un facteur de capturabilité $q$ est estimé par le modèle pour ajuster les valeur de recrutement.
+
+La pente observées entre les valeurs "75a85" et "85a95" est explicable par la mortalité annuelle et la différence de séléctivité attendue pour ces deux classes de tailles.
+``
+
+<!--Sexe-ration biaisé vers les mâles (57%) pour toutes les classes de tailles plus petites que 95cm. Expliquable par la différence de croissance.-->
+
+\newpage
+
+## Captures
+
+Les débarquements déclarés officiels sont utilisés dans le modèle.
+Ceux-ci sont très cohérents avec les débarquements calculés à partir des fichiers ZIFF.
+Différents engins de pêche sont utilisés pour produire ces débarquements, mais la palangre est l'engin très majoritaire dans les décénies récentes.
+
+
+
+
+
+\newpage
+
+## Taux de croissance
+
+Les structures de taille des différentes données récoltées dans le GSL, indépendantes ou non de la pêches, permettent de suggérer par suivi des cohortes une courbe de croissance générale, sexes confondus.
+```
+
+\newpage
+Des travaux sont en cours sur des otolithes de flétan du GSL pour déterminer une courbe de croissance appropiée à ce stock.
+Les valeurs disponibles dans la littérature pour la croissance du flétan atlantique sont très variables, tel qu'indiqué à la Figure \@ref(fig:vonB).
+Les courbes de croissance diponibles (à la longueur) ont été converties en poids à l'aide de la relation longueur-poids actuelle, calculée à partir des flétans mesurés lors des relevés au chalut du MPO.
+
+
+
+
+\newpage
+Dans les équations d'un modèle _delay-difference_, la croissance est exprimé par $\rho$ et $\alpha$, soit la pente et l'ordonnée à l'origine des la droite de régression dans un graphique Ford-Walford (Figure \@ref(fig:fw) et Tableau \@ref(tab:fw-table)):
+
+
+
+
+
+\newpage
+
+## Mortalité naturelle 
+
+La valeur de 0.15 est utilisée pour la modélisation.
+Cette valeur est celle utilisé pour les modélisation du stock du plateau néo-écossais et du sud des grands bancs.
+
+## Poids moyen au recrutement
+
+Pour suivre le changement de taille légale, le poids moyen d'un individus qui recrute à la population est ajusté à la hausse.
+Ce poids moyen est calculé suivant la classe de taille utilisé et la relation longueur-poids.
+
+
+# Exemple d'ajustement utilisable
+
+
+
+# Références
+
+
+

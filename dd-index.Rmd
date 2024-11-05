@@ -20,21 +20,21 @@ Les taux de recapture de étiquettes de flétans marqués sont intégrés au mod
 La référence principale est @hilborn_quantitative_1992.
 
 # Charger le package de fonctions
-```r
+```{r}
 library("ddFletan")
 ```
 
 
 
 # Lire les données
-```r
+```{r}
 load(file.path('dd-input.RData'), verbose=1)
 ```
 Permet d'obtenir une list() d'objets utilisés lors de l'ajustement du modèle
 
 
 # Formater les données
-```r
+```{r}
 anneesFittees <- 1983:2023
 donnee <- calculerDonnee(donneeInit=donneeInit, annees=anneesFittees, valM=0.125, valTR=0.8, Rmin=18000, anOmega.min=1998, RobsSigma.unique=FALSE, omegaSigma.unique=FALSE)
 ## donnee$Bobs <- subset(donnee$Bobs, !(source==1&annee<8))
@@ -42,29 +42,29 @@ donnee <- calculerDonnee(donneeInit=donneeInit, annees=anneesFittees, valM=0.125
 ```
 
 # Formater les paramètres d'entrée
-```r
+```{r}
 param <- calculerParam(donnee, logSigma_C=log(0.05))
 ```
 
 # Ajuster le modèle
-```r
+```{r}
 require('RTMB')
-  randomVal <- c('logRpred','logBpred')
-  ## randomVal <- c('logRpred','logBpred','transTauxExp')
-  ##
-  mapVal <- list(logSigma_C=factor(NA), logSigma_longAge=factor(NA))
-  mapVal <- list(logSigma_C=factor(NA))
-  ## mapVal <- NULL
-  ##
-  obj <- MakeADFun(fnll, param, random=randomVal, map=mapVal)
-  ##
-  ## fit <- nlminb(obj$par, obj$fn, obj$gr)
-  fit <- nlminb(obj$par, obj$fn, obj$gr, control = list(eval.max=100000000, iter.max=100000000))
-  fit
+randomVal <- c('logRpred','logBpred')
+## randomVal <- c('logRpred','logBpred','transTauxExp')
+##
+mapVal <- list(logSigma_C=factor(NA), logSigma_longAge=factor(NA))
+mapVal <- list(logSigma_C=factor(NA))
+## mapVal <- NULL
+##
+obj <- MakeADFun(fnll, param, random=randomVal, map=mapVal)
+##
+## fit <- nlminb(obj$par, obj$fn, obj$gr)
+fit <- nlminb(obj$par, obj$fn, obj$gr, control = list(eval.max=100000000, iter.max=100000000))
+fit
 ```
 
 # Sorties du modèle
-```r
+```{r}
   sdr <- sdreport(obj)
   pl <- as.list(sdr, "Est")
   plsd <- as.list(sdr, "Std")

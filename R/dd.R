@@ -1,3 +1,5 @@
+testfct <- function(x){print(x)}
+
 fnll <- function(param, fit=TRUE){
   getAll(param, donnee)
   ##

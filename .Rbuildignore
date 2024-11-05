@@ -1,3 +1,6 @@
 ^ddFletan\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^input_dd\.RData$
+^dd-input\.RData$
+^dd-index\.Rmd$

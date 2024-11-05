@@ -1,7 +1,7 @@
 runDD <- function(annee.courante=2023) {
   require('RTMB')
   #
-  load(file.path('S:','Flétan','evaluation stock', 'input', annee.courante, 'dd', 'input_dd.RData'), verbose=1)
+  load(file.path('input_dd.RData'), verbose=1)
   #
   anneesFittees <- 1983:2023
   donnee <- calculerDonnee(donneeInit=donneeInit, annees=anneesFittees, valM=0.125, valTR=0.8, Rmin=18000, anOmega.min=1998, RobsSigma.unique=FALSE,
@@ -50,7 +50,7 @@ runDD <- function(annee.courante=2023) {
 fnll <- function(param, fit=TRUE){
   getAll(param, donnee)
   ##
-  ## Écart-type des fonctions vraissemblances
+  ## \U{00E9}cart-type des fonctions vraissemblances
   sigma_Bobs <- exp(logSigma_Bobs)
   sigma_Bproc <- exp(logSigma_Bproc)
   sigma_oBar <- exp(logSigma_oBar)
@@ -62,15 +62,15 @@ fnll <- function(param, fit=TRUE){
   ##
   Bobs <- OBS(Bobs)
   ##
-  ## Paramètres variables dans le temps
-  Bpred <- exp(logBpred) #Bpred inclus B0, donc donc commence à l'an 0
+  ## Param\U{00E8}tres variables dans le temps
+  Bpred <- exp(logBpred) #Bpred inclus B0, donc donc commence \U{00E0} l'an 0
   Rpred <- exp(logRpred)
   tauxExp <- 0.001 + 0.9*plogis(transTauxExp) # entre 0.001 et 0.9
   F <- -log(1-tauxExp)
   Z <- F+M
-  s <- exp(-M) * (1-tauxExp) #équivalent à exp(-Z)
+  s <- exp(-M) * (1-tauxExp) #\U{00E9}quivalent \U{00E0} exp(-Z)
   ##
-  ## Paramètres invariables dans le temps
+  ## Param\U{00E8}tres invariables dans le temps
   N0 <- exp(logN0)
   qRel <- c(2*plogis(transQrelGSL), 2*plogis(transQrelAutre))
   qRecru <- 2*plogis(transRapportQrecru) * qRel[1] #par rapport au q des adultes
@@ -79,7 +79,7 @@ fnll <- function(param, fit=TRUE){
   K <- exp(logK)
   t0 <- -5 + 10*plogis(transT0) #entre -5 et 5
   ##
-  ## calcul des paramètre du graphique Ford-Walford (rho et alpha), selon l'étendue des longueurs moyennes observés
+  ## calcul des param\U{00E8}tre du graphique Ford-Walford (rho et alpha), selon l'\U{00E9}tendue des longueurs moyennes observ\U{00E9}s
   poidsMoyMin <- min(omega$valeur)
   ageMin <- log(1-((poidsMoyMin/lpAlpha)^(1/lpBeta))/linf) / -K + t0
   poidsMoyMin.plus1an <- lpAlpha * (linf * (1-exp(-K * ((ageMin+1)-t0))))^lpBeta
@@ -94,12 +94,12 @@ fnll <- function(param, fit=TRUE){
   ## rho <- (poidsMoyMin.plus1an - winf) / (poidsMoyMin - winf)
   ## alpha <- winf*(1 - rho)
   ##
-  ## Initialisation à l'an 1
+  ## Initialisation \U{00E0} l'an 1
   Bpred.proc <- s[1] * alpha * N0 +
-    s[1] * rho * Bpred[1] + #Bpred commence à l'an 0
+    s[1] * rho * Bpred[1] + #Bpred commence \U{00E0} l'an 0
     omegaK[1,'valeur'] * Rpred[1]
   Npred <- s[1] * N0 + Rpred[1]
-  Cpred <- tauxExp[1] * Bpred[1] * exp(-M) #pêche après mortalité naturelle
+  Cpred <- tauxExp[1] * Bpred[1] * exp(-M) #p\U{00EA}che apr\U{00E8}s mortalit\U{00E9} naturelle
   ##
   ## Progression annuelle
   for(i in 2:(length(Bpred)-1)){
@@ -107,21 +107,21 @@ fnll <- function(param, fit=TRUE){
       s[i] * rho * Bpred[i] +
       omegaK[i,'valeur'] * Rpred[i]
     Npred[i] <- s[i] * Npred[i-1] + Rpred[i]
-    Cpred[i] <- tauxExp[i] * Bpred[i] * exp(-M) #pêche après mortalité naturelle
-    if(i==a2010){ # ajuster la biomasse pour le changement de taille légale en 2010
+    Cpred[i] <- tauxExp[i] * Bpred[i] * exp(-M) #p\U{00EA}che apr\U{00E8}s mortalit\U{00E9} naturelle
+    if(i==a2010){ # ajuster la biomasse pour le changement de taille l\U{00E9}gale en 2010
       Bpred.proc[i] <- Bpred.proc[i] * drop2010
-      ## soustraction du nombre de poisson en moins, selon la biomasse soustraite et le poids moyen à cette taille
+      ## soustraction du nombre de poisson en moins, selon la biomasse soustraite et le poids moyen \U{00E0} cette taille
       Npred[i] <- Npred[i] - Bpred.proc[i] * (1-drop2010) / poidsMoy81a85
     }
   }
   omegaPred <- tail(Bpred,-1)/Npred
   ##
-  ## suivi des tags présents dans l'eau et recapturés
+  ## suivi des tags pr\U{00E9}sents dans l'eau et recaptur\U{00E9}s
   nTag <- matrix(nrow=length(Bpred)-1, ncol=length(Bpred)-1)
-  nTagRetourPred <- matrix(NA, nrow=length(Bpred)-1, ncol=length(Bpred)-1) #pas de captures l'année de marquage
+  nTagRetourPred <- matrix(NA, nrow=length(Bpred)-1, ncol=length(Bpred)-1) #pas de captures l'ann\U{00E9}e de marquage
   for(i in 1:(nrow(nTag)-1)){
     nTag[i,i] <- nTagsPoses$valeur[i] * sPostMarquage
-    for(j in (i+1):ncol(nTag)){ #remplir le triangle supérieur
+    for(j in (i+1):ncol(nTag)){ #remplir le triangle sup\U{00E9}rieur
       nTag.temp <- nTag[i,j-1] * (1-perteTag[j-1,'perteAnnuelle2tag'])
       nTag[i,j] <- nTag.temp * s[j]
       nTagRetourPred[i,j] <- nTag.temp * exp(-M) * tauxExp[j] * tauxRetour
@@ -133,10 +133,10 @@ fnll <- function(param, fit=TRUE){
   ## erreur de processus sur la biomasse, retirer le premier Bpred
   nll.Bproc <- -sum(dnorm(tail(logBpred,-1), log(Bpred.proc), sigma_Bproc, log=TRUE), na.rm=TRUE)
   ##
-  ## marche aléatoire walk du recrutement
+  ## marche al\U{00E9}atoire walk du recrutement
   nll.recru <- -sum(dnorm(log(Rpred[-length(Rpred)]), log(Rpred[-1]), sigma_Rrw, log=TRUE), na.rm=TRUE)
   ##
-  ## erreur d'ajustement de la longueur à l'age
+  ## erreur d'ajustement de la longueur \U{00E0} l'age
   nll.longAge <- -sum(dnorm(croiss$longueur, linf*(1-exp(-K*(croiss$age-t0))), sigma_longAge, log=TRUE), na.rm=TRUE)
   ##
   ## erreur d'observation sur les captures
@@ -176,7 +176,7 @@ fnll <- function(param, fit=TRUE){
     }
   }
   ##
-  ## erreur d'observation sur les retours d'étiquettes
+  ## erreur d'observation sur les retours d'\U{00E9}tiquettes
   nll.tag <- 0
   for(i in 1:nrow(nTagsRetourObs)){
     anPose <- nTagsRetourObs[i,'anneePose']
@@ -237,9 +237,9 @@ fnll <- function(param, fit=TRUE){
 calculerDonnee <- function(donneeInit, annees, valM=0.15, valTR=0.8, Rmin=3000, anOmega.min=1998, doublerC=FALSE, RobsSigma.unique=FALSE,
                            omegaSigma.unique=FALSE) {
   d <- donneeInit
-  d$anneesFittees <- donneeInit$anneesFittees[which(donneeInit$anneesFittees%in%annees)] #années utilisées
+  d$anneesFittees <- donneeInit$anneesFittees[which(donneeInit$anneesFittees%in%annees)] #ann\U{00E9}es utilis\U{00E9}es
   d$anneesFitteesID <- seq_along(d$anneesFittees); names(d$anneesFitteesID) <- d$anneesFittees
-  d$anneesBH <- range(d$anneesFitteesID[which(d$anneesFittees%in%1990:max(d$anneesFittees))]) #années min et max sur lesquelles ajuster la SRR
+  d$anneesBH <- range(d$anneesFitteesID[which(d$anneesFittees%in%1990:max(d$anneesFittees))]) #ann\U{00E9}es min et max sur lesquelles ajuster la SRR
   d$Cobs <- subset(donneeInit$Cobs, annee%in%d$anneesFittees); d$Cobs$annee <- d$anneesFitteesID[match(d$Cobs$annee,d$anneesFittees)] #obs des captures
   if(doublerC) d$Cobs <- rbind(d$Cobs,d$Cobs)
   d$Bobs <- subset(donneeInit$Bobs, annee%in%d$anneesFittees); d$Bobs$annee <- d$anneesFitteesID[match(d$Bobs$annee,d$anneesFittees)]  #obs des abondances
@@ -249,14 +249,14 @@ calculerDonnee <- function(donneeInit, annees, valM=0.15, valTR=0.8, Rmin=3000, 
   d$omega <- subset(donneeInit$omega, annee%in%d$anneesFittees); d$omega$annee <- d$anneesFitteesID[match(d$omega$annee,d$anneesFittees)]  #obs poids moy
   d$omega <- subset(d$omega, annee%in%d$anneesFitteesID[which(d$anneesFittees>=anOmega.min)]); d$omega$sigma <- d$omega$source;
   d$omegaK <- subset(donneeInit$omegaK, annee%in%d$anneesFittees)
-  d$omegaK$annee <- d$anneesFitteesID[match(d$omegaK$annee,d$anneesFittees)] #poids moyen au recrutement (variable selon la taille minimale légale)
+  d$omegaK$annee <- d$anneesFitteesID[match(d$omegaK$annee,d$anneesFittees)] #poids moyen au recrutement (variable selon la taille minimale l\U{00E9}gale)
   d$nTagsPoses <- subset(donneeInit$nTagsPoses, annee%in%d$anneesFittees)
-  d$nTagsPoses$annee <- d$anneesFitteesID[match(d$nTagsPoses$annee,d$anneesFittees)]  #nombre de flétans étiquettés par année
+  d$nTagsPoses$annee <- d$anneesFitteesID[match(d$nTagsPoses$annee,d$anneesFittees)]  #nombre de fl\U{00E9}tans \U{00E9}tiquett\U{00E9}s par ann\U{00E9}e
   d$nTagsRetourObs <- subset(donneeInit$nTagsRetourObs, anneePose%in%d$anneesFittees & anneeRecap%in%d$anneesFittees);
-  d$nTagsRetourObs$anneePose <- d$anneesFitteesID[match(d$nTagsRetourObs$anneePose,d$anneesFittees)] #nb de flétan recap, an marquage et an recap
-  d$nTagsRetourObs$anneeRecap <- d$anneesFitteesID[match(d$nTagsRetourObs$anneeRecap,d$anneesFittees)] #nb de flétan recap par an marquage et an recap
-  ## d$nTagsRetour <- donneeInit$nTagsRetour[as.character(d$anneesFittees)] #nombre total de retour d'étiquettes par année
-  ## ajuster les numéro de source si certaines sont manquantes, utile surtout si certains relevé ne sont pas considérés
+  d$nTagsRetourObs$anneePose <- d$anneesFitteesID[match(d$nTagsRetourObs$anneePose,d$anneesFittees)] #nb de fl\U{00E9}tan recap, an marquage et an recap
+  d$nTagsRetourObs$anneeRecap <- d$anneesFitteesID[match(d$nTagsRetourObs$anneeRecap,d$anneesFittees)] #nb de fl\U{00E9}tan recap par an marquage et an recap
+  ## d$nTagsRetour <- donneeInit$nTagsRetour[as.character(d$anneesFittees)] #nombre total de retour d'\U{00E9}tiquettes par ann\U{00E9}e
+  ## ajuster les num\U{00E9}ro de source si certaines sont manquantes, utile surtout si certains relev\U{00E9} ne sont pas consid\U{00E9}r\U{00E9}s
   for(i.source in c('Bobs','Robs','omega')){
     if(length(unique(d[[i.source]]$source))<max(d[[i.source]]$source)){
       sourceInit <- sort(unique(d[[i.source]]$source))
@@ -269,12 +269,12 @@ calculerDonnee <- function(donneeInit, annees, valM=0.15, valTR=0.8, Rmin=3000, 
   if(RobsSigma.unique) d$Robs$sigma <- 1
   if(omegaSigma.unique) d$omega$sigma <- 1
   ##
-  ## données non influencé par le choix d'années:
+  ## donn\U{00E9}es non influenc\U{00E9} par le choix d'ann\U{00E9}es:
   if(FALSE){
-    d$a2010 #indice de l'année du changement de taille minimale légale
-    d$drop2010 #taux de diminution de la biomasse liée au changement de taille légale
-    d$poidsMoy81a85 #poids moyen des flétan entre 81 et 85 cm
-    d$lagBH         #nombre d'années entre la biomasse 85+ et le recrutement produit par celle-ci
+    d$a2010 #indice de l'ann\U{00E9}e du changement de taille minimale l\U{00E9}gale
+    d$drop2010 #taux de diminution de la biomasse li\U{00E9}e au changement de taille l\U{00E9}gale
+    d$poidsMoy81a85 #poids moyen des fl\U{00E9}tan entre 81 et 85 cm
+    d$lagBH         #nombre d'ann\U{00E9}es entre la biomasse 85+ et le recrutement produit par celle-ci
     d$lpAlpha #parametres de la relation poids-longueur de forme p=a*x^b
     d$lpBeta
   }
@@ -288,11 +288,11 @@ calculerDonnee <- function(donneeInit, annees, valM=0.15, valTR=0.8, Rmin=3000, 
   return(d)
 }
 calculerParam <- function(donnee, logSigma_C=NULL){
-  ## calcul des parametres d'entrée
+  ## calcul des parametres d'entr\U{00E9}e
   annees <- donnee$anneesFittees
   par <- list()
   ##
-  par$logSigma_Bobs <- rep(0, length(unique(donnee$Bobs$sigma))) #la première source est la biomasse minimale chalutable des RV-mpo
+  par$logSigma_Bobs <- rep(0, length(unique(donnee$Bobs$sigma))) #la premi\U{00E8}re source est la biomasse minimale chalutable des RV-mpo
   par$logSigma_Bproc <- 0
   par$logSigma_oBar <- rep(0, length(unique(donnee$omega$sigma)))
   if(is.null(logSigma_C)){par$logSigma_C <- 0}else{par$logSigma_C <- logSigma_C}
@@ -302,9 +302,9 @@ calculerParam <- function(donnee, logSigma_C=NULL){
   par$logSigma_retourTag <- 0
   ##
   par$transQrelGSL <- qlogis(0.7/2) #biomasse minimale chalutable des RV-mpo
-  if(length(unique(donnee$Bobs$source)) > 1) par$transQrelAutre <- rep(qlogis(0.000005/2),length(unique(donnee$Bobs$source))-1) #autres indices utilisés
-  par$transRapportQrecru <- rep(qlogis(1/2), length(unique(donnee$Robs$source))) #utiliser le rapport avec le q utilisé pour la biomasse minimale chalutable
-  par$transTauxExp <- rep(qlogis((0.1-0.001)/0.9), length(annees)) #captures divisé par biomasse
+  if(length(unique(donnee$Bobs$source)) > 1) par$transQrelAutre <- rep(qlogis(0.000005/2),length(unique(donnee$Bobs$source))-1) #autres indices utilis\U{00E9}s
+  par$transRapportQrecru <- rep(qlogis(1/2), length(unique(donnee$Robs$source))) #utiliser le rapport avec le q utilis\U{00E9} pour la biomasse minimale chalutable
+  par$transTauxExp <- rep(qlogis((0.1-0.001)/0.9), length(annees)) #captures divis\U{00E9} par biomasse
   par$logBpred <- rep(log(2e7), length(annees)+1)
   par$logRpred <- rep(log(1e6), length(annees))
   ## par$logB0 <- par$logBpred[1]
@@ -322,9 +322,9 @@ calculerParam <- function(donnee, logSigma_C=NULL){
 graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, ylimLog=NULL, pl=list(), plsd=list(), langue=c('fr','en','bil'), residus=TRUE,
                     ajouterProc=FALSE){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labBiom <- "Biomasse ('000t)"; labRes <- 'Résidus standardisés'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labBiom <- "Biomasse ('000t)"; labRes <- 'R\U{00E9}sidus standardis\U{00E9}s'},
          'en' = {labAn <- 'Year'; labBiom <- "Biomass ('000t)"; labRes <- 'Standardized residuals'},
-         'bil' = {labAn <- 'Année/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labRes <- 'Résidus/Residuals'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labRes <- 'R\U{00E9}sidus/Residuals'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj[[1]]), length(fProj), na.rm=TRUE)
   }else{
@@ -346,7 +346,7 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
     lines(c(min(donnee$anneesFittees)-1,donnee$anneesFittees), objReport$Bpred/1000/1000)
   }
   abline(h=0, col='grey')
-  if(!is.null(msyVal)){ # des points de référence sont ajoutés à 0.4 et 0.8 msy
+  if(!is.null(msyVal)){ # des points de r\U{00E9}f\U{00E9}rence sont ajout\U{00E9}s \U{00E0} 0.4 et 0.8 msy
     abline(h=msyVal$B/1000/1000, lty=2) #Bmsy
     axis(4, at=msyVal$B/1000/1000, label='RMS')
     axis(4, at=as.numeric(msyVal$B)/1000/1000*c(0.4,0.8), label=rep('',2))
@@ -408,7 +408,7 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
     text(x=mean(par('usr')[c(1,2)]), y=diff(par('usr')[c(3,4)])*0.9 + par('usr')[3], label='B', cex=1.5)
     ##
     ## Erreur de processus sur B
-    ## pour améliorer, consulter la formation Halifax2024 par Anders Nielsen
+    ## pour am\U{00E9}liorer, consulter la formation Halifax2024 par Anders Nielsen
     print('Erreur de processus sur B en developpement')
     ## plot(donnee$anneesFittees, (log(objReport$Bpred.proc)-log(tail(objReport$Bpred,-1))), xlim=range(donnee$anneesFittees)+c(0,nbAnProj), ylim=Bres.ylim, yaxs='i',
     ##      pch=21, bg=7, xlab=labAn, ylab=labRes); abline(h=0)
@@ -427,9 +427,9 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
 ##
 graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, ylimLog=NULL, pl=list(), plsd=list(), langue=c('fr','en','bil'), residus=TRUE){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labBiom <- "Biomasse ('000t)"; labRes <- 'Résidus standardisés'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labBiom <- "Biomasse ('000t)"; labRes <- 'R\U{00E9}sidus standardis\U{00E9}s'},
          'en' = {labAn <- 'Year'; labBiom <- "Biomass ('000t)"; labRes <- 'Standardized residuals'},
-         'bil' = {labAn <- 'Année/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labRes <- 'Résidus/Residuals'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labRes <- 'R\U{00E9}sidus/Residuals'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj), length(fProj), na.rm=TRUE)
   }else{
@@ -438,7 +438,7 @@ graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
   plot(donnee$anneesFittees, objReport$Rpred/1000, type='l',
        xlim=range(donnee$anneesFittees)+c(0,nbAnProj)+c(0,max(donneeInit$Robs$annee)-max(donnee$anneesFittees)),
        ylim=c(0,max(objReport$Rpred,donnee$Robs[,'valeur']/objReport$qRecru[donnee$Robs[,'source']], na.rm=TRUE))/1000,
-       ylab="Nombre ('000)", xlab='Année')
+       ylab="Nombre ('000)", xlab='Ann\U{00E9}e')
   ## abline(v=1992.5, col='grey50')
   ## abline(v=1992.5+9, col='grey50', lty=3)
   abline(h=0, col='grey')
@@ -473,7 +473,7 @@ graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
   if(residus){
     plot(donnee$anneesFittees[subset(donnee$Robs, source==1)$annee]-0.4,
          (log(subset(donnee$Robs, source==1)$valeur / objReport$qRecru[1]) - (log(objReport$Rpred)[subset(donnee$Robs, source==1)$annee])) / exp(fit$par[which(names(fit$par)=='logSigma_Robs')][1]),
-         xlim=range(donnee$anneesFittees)+c(0,nbAnProj), ylim=ylimLog, type='n', xlab='Année', ylab='Résidus standardisés')
+         xlim=range(donnee$anneesFittees)+c(0,nbAnProj), ylim=ylimLog, type='n', xlab='Ann\U{00E9}e', ylab='R\U{00E9}sidus standardis\U{00E9}s')
     abline(h=0, col='grey')
     for(i in unique(donnee$Robs$source)){
       temp <- subset(donnee$Robs, source==i)
@@ -509,9 +509,9 @@ graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
 }
 graph.kobe <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, Bmax=NA, langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labBiom <- "Biomasse ('000t)"; labRes <- 'Résidus standardisés'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labBiom <- "Biomasse ('000t)"; labRes <- 'R\U{00E9}sidus standardis\U{00E9}s'},
          'en' = {labAn <- 'Year'; labBiom <- "Biomass ('000t)"; labRes <- 'Standardized residuals'},
-         'bil' = {labAn <- 'Année/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labRes <- 'Résidus/Residuals'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labRes <- 'R\U{00E9}sidus/Residuals'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj[[1]]), length(fProj), na.rm=TRUE)
   }else{
@@ -545,9 +545,9 @@ graph.kobe <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, f
 ##
 graph.omega <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, ylimLog=NULL, langue=c('fr','en','bil'), residus=TRUE){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labPoids <- "Poids individuel moyen (kg)"; labRes <- 'Résidus standardisé'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labPoids <- "Poids individuel moyen (kg)"; labRes <- 'R\U{00E9}sidus standardis\U{00E9}'},
          'en' = {labAn <- 'Year'; labPoids <- "Mean individual weight (kg)"; labRes <- 'Strandardized residuals'},
-         'bil' = {labAn <- 'Année/Year'; labPoids <- "Poids individuel moyen/Mean indivudual weight (kg)"; labRes <- 'Résidus/Residuals'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labPoids <- "Poids individuel moyen/Mean indivudual weight (kg)"; labRes <- 'R\U{00E9}sidus/Residuals'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj[[1]]), length(fProj), na.rm=TRUE)
   }else{
@@ -569,7 +569,7 @@ graph.omega <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, 
             lty=2)
     }
   }
-  legend('topleft', inset=0.03, legend=c('Échantillonneur à quai','Observateur en mer','Modélisé'), lty=c(NA,NA,1), pch=c(16,16,NA), col=c(2,3,1))
+  legend('topleft', inset=0.03, legend=c('\U{00E9}chantillonneur \U{00E0} quai','Observateur en mer','Mod\U{00E9}lis\U{00E9}'), lty=c(NA,NA,1), pch=c(16,16,NA), col=c(2,3,1))
   text(x=mean(par('usr')[c(1,2)]), y=diff(par('usr')[c(3,4)])*0.9 + par('usr')[3], label='A', cex=1.5)
   ##
   ## residuels
@@ -604,9 +604,9 @@ graph.omega <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, 
 ##
 graph.N <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, valProj=NULL, fProj=NA, langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labNb <- "Nombre"},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labNb <- "Nombre"},
          'en' = {labAn <- 'Year'; labNb <- "Number"},
-         'bil' = {labAn <- 'Année/Year'; labNb <- "Nombre/Number"})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labNb <- "Nombre/Number"})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj[[1]]), length(fProj), na.rm=TRUE)
   }else{
@@ -632,9 +632,9 @@ graph.N <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, valP
 ##
 graph.C <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, Cmax=NA, langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labDeb <- "Débarquements ('000t)"; labF <- 'Taux instantané'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labDeb <- "D\U{00E9}barquements ('000t)"; labF <- 'Taux instantan\U{00E9}'},
          'en' = {labAn <- 'Year'; labDeb <- "Landings ('000t)"; labF <- 'Instantaneous rate'},
-         'bil' = {labAn <- 'Année/Year'; labDeb <- "Débarquements/Landings ('000t)"; labF <- 'Taux instantané/Instantaneous rate'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labDeb <- "D\U{00E9}barquements/Landings ('000t)"; labF <- 'Taux instantan\U{00E9}/Instantaneous rate'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj[[1]]), length(fProj), na.rm=TRUE)
   }else{
@@ -675,9 +675,9 @@ graph.C <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
 ##
 graph.F <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, Fmax=NA, pl=list(), plsd=list(), langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labDeb <- "Débarquements ('000t)"; labF <- 'Taux instantané'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labDeb <- "D\U{00E9}barquements ('000t)"; labF <- 'Taux instantan\U{00E9}'},
          'en' = {labAn <- 'Year'; labDeb <- "Landings ('000t)"; labF <- 'Instantaneous rate'},
-         'bil' = {labAn <- 'Année/Year'; labDeb <- "Débarquements/Landings ('000t)"; labF <- 'Taux instantané/Instantaneous rate'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labDeb <- "D\U{00E9}barquements/Landings ('000t)"; labF <- 'Taux instantan\U{00E9}/Instantaneous rate'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
     nbAnProj <- max(length(tacProj[[1]]), length(fProj), na.rm=TRUE)
   }else{
@@ -729,11 +729,11 @@ graph.F <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
 ##
 graph.retourTag <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, langue=c('fr','en','bil'), residus=TRUE){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labNbRet <- 'Nombre de retours'; labTxRet <- 'Taux de retour'; labSurvie <- 'Survie post-marquage';
-         labAnCapt='Année de capture'; labAnMarq='Années de marquage'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labNbRet <- 'Nombre de retours'; labTxRet <- 'Taux de retour'; labSurvie <- 'Survie post-marquage';
+         labAnCapt='Ann\U{00E9}e de capture'; labAnMarq='Ann\U{00E9}es de marquage'},
          'en' = {labAn <- 'Year'; labNbRet <- 'Number of returns'; labTxRet <- 'Return rate'; labSurvie <- 'Post-tagging survival';
          labAnCapt='Year of capture'; labAnMarq='Year of tagging'},
-         'bil' = {labAn <- 'Année/Year'; labNbRet <- 'Nombre de retours/Number of returns'; labTxRet <- 'Taux de retour/Return rate';
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labNbRet <- 'Nombre de retours/Number of returns'; labTxRet <- 'Taux de retour/Return rate';
          labSurvie <- 'Survie post-marquage/Post-tagging survival';
          labAnCapt='Capture'; labAnMarq='Marquage/Tagging'})
   if(!any(is.na(tacProj)) | !any(is.na(fProj))){
@@ -790,7 +790,7 @@ graph.retourTag <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=
     }
   }
   ##
-  ## résiduels
+  ## r\U{00E9}siduels
   if(residus){
     plot(0,0,type='n',
          xlim=donnee$anneesFittees[range(donnee$nTagsRetourObs$anneeRecap)], ylim=donnee$anneesFittees[range(donnee$nTagsRetourObs$anneePose)]+c(-0.5,0.5),
@@ -806,9 +806,9 @@ graph.retourTag <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=
 ##
 graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimLog=NULL, steep=TRUE, lesquels=1:4, langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labB85 <- "B85+ ('000t)"; labRecru <- "Recrues ('000)"; labRes <- 'Résidus standardisés'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labB85 <- "B85+ ('000t)"; labRecru <- "Recrues ('000)"; labRes <- 'R\U{00E9}sidus standardis\U{00E9}s'},
          'en' = {labAn <- 'Year'; labB85 <- "B85+ ('000t)"; labRecru <- "Recruits ('000)"; labRes <- 'Standardized residuals'},
-         'bil' = {labAn <- 'Année/Year'; labB85 <- "B85+ ('000t)"; labRecru <- "Recrues/Recruits ('000)"; labRes <- 'Résidus/Residuals'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labB85 <- "B85+ ('000t)"; labRecru <- "Recrues/Recruits ('000)"; labRes <- 'R\U{00E9}sidus/Residuals'})
   ##
   annees <- donnee$anneesBH[1]:donnee$anneesBH[2]
   if(1%in%lesquels){
@@ -921,7 +921,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
   }
   ##
   if(3%in%lesquels){
-    ## SSR résidus
+    ## SSR r\U{00E9}sidus
     annees <- donnee$anneesBH[1]:donnee$anneesBH[2]
     Rtemp <- tail(objReport$Rpred[annees],-(donnee$lagBH))
     Btemp <- head(objReport$Bpred[annees+1],-(donnee$lagBH))
@@ -983,8 +983,8 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
 ##
 graph.ageLong <- function(donnee, param, objReport=NULL, msyVal=NULL, langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAge <- 'Age'; labTaille <- 'Taille (cm)'; labPoids <- 'Poids (kg)'; labPoidsA <- 'Poids (kg), âge a'; labPoidsB <- 'Poids (kg), âge a+1'},
-         'en' = {labAge <- 'Age'; labTaille <- 'Size (cm)'; labPoids <- 'Weight (kg)'; labPoidsA <- 'Weight (kg), age a'; labPoidsB <- 'Weight (kg), âge a+1'},
+         'fr' = {labAge <- 'Age'; labTaille <- 'Taille (cm)'; labPoids <- 'Poids (kg)'; labPoidsA <- 'Poids (kg), \U{00E2}ge a'; labPoidsB <- 'Poids (kg), \U{00E2}ge a+1'},
+         'en' = {labAge <- 'Age'; labTaille <- 'Size (cm)'; labPoids <- 'Weight (kg)'; labPoidsA <- 'Weight (kg), age a'; labPoidsB <- 'Weight (kg), \U{00E2}ge a+1'},
          'bil' = {labAge <- 'Age'; labTaille <- 'Taille/Size (cm)'; labPoids <- 'Poids/Weight (kg)'; labPoidsA <- 'Poids/Weight, age a'; labPoidsB <- 'Poids/Weight, age a+1'})
   ##
   ## age-longueur
@@ -994,11 +994,11 @@ graph.ageLong <- function(donnee, param, objReport=NULL, msyVal=NULL, langue=c('
   curve(objReport$linf * (1-exp(-objReport$K * (x-(objReport$t0)))), add=TRUE, col=2)
   legend('bottomright', inset=0.03, legend=paste(c('Linf=','K=','t0='),
                                                  c(round(objReport$linf), round(objReport$K,3), round(objReport$t0,2))))
-  if(FALSE){ #graph des résidus
+  if(FALSE){ #graph des r\U{00E9}sidus
     plot(donnee$croiss$age, (donnee$croiss$longueur)-(objReport$linf * (1-exp(-objReport$K * (donnee$croiss$age-(objReport$t0))))),
-         main='Residus croissance', xlab='Age', ylab='Résidus'); abline(h=0)
+         main='Residus croissance', xlab='Age', ylab='R\U{00E9}sidus'); abline(h=0)
     ## plot(donnee$croiss$age, log(donnee$croiss$longueur)-log(objReport$linf * (1-exp(-objReport$K * (donnee$croiss$age-(objReport$t0))))),
-    ##      main='Residus croissance', xlab='Age', ylab='Résidus'); abline(h=0)
+    ##      main='Residus croissance', xlab='Age', ylab='R\U{00E9}sidus'); abline(h=0)
   }
   text(x=mean(par('usr')[c(1,2)]), y=diff(par('usr')[c(3,4)])*0.9 + par('usr')[3], label='A', cex=1.5)
   ##
@@ -1018,7 +1018,7 @@ graph.ageLong <- function(donnee, param, objReport=NULL, msyVal=NULL, langue=c('
   plot(head(poids.age,-1), tail(poids.age,-1), xlim=c(0,poids.age[head(which(poids.age>poids.max),1)+2]), ylim=c(0,poids.age[head(which(poids.age>poids.max),1)+3]),
        xlab=labPoidsA, ylab=labPoidsB)
   ## plot(head(poids.age,-1), tail(poids.age,-1), xlim=c(0,200), ylim=c(0,200),
-  ##      xlab='Poids moyen, âge a', ylab='Poids moyen, âge a+1')
+  ##      xlab='Poids moyen, \U{00E2}ge a', ylab='Poids moyen, \U{00E2}ge a+1')
   abline(v=donnee$lpAlpha*85^donnee$lpBeta)
   axis(3, at=donnee$lpAlpha*85^donnee$lpBeta, label='85 cm')
   curve(objReport$alpha+x*objReport$rho, from=poids.min, to=poids.max, add=TRUE, col=4, lwd=3)
@@ -1033,9 +1033,9 @@ graph.ageLong <- function(donnee, param, objReport=NULL, msyVal=NULL, langue=c('
 ##
 graph.B.retro <- function(retro, langue=c('fr','en','bil')){
   switch(langue,
-         'fr' = {labAn <- 'Année'; labBiom <- "Biomasse ('000t)"; labBmsy <- 'Biomasse / Brms'},
+         'fr' = {labAn <- 'Ann\U{00E9}e'; labBiom <- "Biomasse ('000t)"; labBmsy <- 'Biomasse / Brms'},
          'en' = {labAn <- 'Year'; labBiom <- "Biomass ('000t)"; labBmsy <- 'Biomass / Bmsy'},
-         'bil' = {labAn <- 'Année/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labBmsy <- 'Biomasse/Brms - Biomass/Bmsy'})
+         'bil' = {labAn <- 'Ann\U{00E9}e/Year'; labBiom <- "Biomasse/Biomass ('000t)"; labBmsy <- 'Biomasse/Brms - Biomass/Bmsy'})
   ##
   ## biomasse absolue
   temp <- retro[[1]]

@@ -28,7 +28,10 @@ library("ddFletan")
 
 # Lire les données
 ```{r}
-load(file.path('dd-input.RData'), verbose=1)
+##load(file.path('dd-input.RData'), verbose=1)
+annee.courante <- 2023 #dernière année de données considérée
+sourceGenerale <- file.path('S:','Flétan','evaluation stock', 'input', annee.courante)
+load(file=file.path(sourceGenerale, 'dd', 'input_dd.RData'), verbose=1)
 ```
 Permet d'obtenir une list() d'objets utilisés lors de l'ajustement du modèle
 
@@ -36,7 +39,6 @@ Permet d'obtenir une list() d'objets utilisés lors de l'ajustement du modèle
 # Formater les données
 ```{r}
 anneesFittees <- 1983:2023
-testfct(1)
 donnee <- calculerDonnee(donneeInit=donneeInit, annees=anneesFittees, valM=0.125, valTR=0.8, Rmin=18000, anOmega.min=1998, RobsSigma.unique=FALSE, omegaSigma.unique=FALSE)
 ## donnee$Bobs <- subset(donnee$Bobs, !(source==1&annee<8))
 ## donnee$omegaK$valeur <- donnee$omegaK$valeur*1.15
@@ -56,6 +58,7 @@ randomVal <- c('logRpred','logBpred')
 mapVal <- list(logSigma_C=factor(NA), logSigma_longAge=factor(NA))
 mapVal <- list(logSigma_C=factor(NA))
 ## mapVal <- NULL
+fnll
 ##
 obj <- MakeADFun(fnll, param, random=randomVal, map=mapVal)
 ##

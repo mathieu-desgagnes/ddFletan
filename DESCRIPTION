@@ -1,5 +1,5 @@
 Package: ddFletan
-Title: Modele difference-delai ajusté au flétan atlantique 4RST.
+Title: Modele difference-delai ajusté au flétan atlantique 4RST
 Version: 0.0.0.9000
 Authors@R: 
     person("Mathieu", "Desgagnés", , "mathieu.desgagnes@dfo-mpo.gc.ca", role = c("aut", "cre"),

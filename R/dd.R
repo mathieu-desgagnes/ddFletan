@@ -47,7 +47,7 @@ calculerDonnee <- function(donneeInit, annees, valM=0.15, valTR=0.8, Rmin=3000, 
   d$sPostMarquage <- 0.95
   d$tauxRetour <- valTR
   temp <- diff(d$perteTag$perteCummul2tag)
-  d$perteTag$perteAnnuelle2tag <- c(temp,tail(temp,1))
+  d$perteTag$perteAnnuelle2tag <- c(temp,utils::tail(temp,1))
   ##
   return(d)
 }
@@ -65,14 +65,14 @@ calculerParam <- function(donnee, logSigma_C=NULL){
   par$logSigma_longAge <- 0
   par$logSigma_retourTag <- 0
   ##
-  par$transQrelGSL <- qlogis(0.7/2) #biomasse minimale chalutable des RV-mpo
-  if(length(unique(donnee$Bobs$source)) > 1) par$transQrelAutre <- rep(qlogis(0.000005/2),length(unique(donnee$Bobs$source))-1) #autres indices utilis\U{00E9}s
-  par$transRapportQrecru <- rep(qlogis(1/2), length(unique(donnee$Robs$source))) #utiliser le rapport avec le q utilis\U{00E9} pour la biomasse minimale chalutable
-  par$transTauxExp <- rep(qlogis((0.1-0.001)/0.9), length(annees)) #captures divis\U{00E9} par biomasse
+  par$transQrelGSL <- stats::qlogis  (0.7/2) #biomasse minimale chalutable des RV-mpo
+  if(length(unique(donnee$Bobs$source)) > 1) par$transQrelAutre <- rep(stats::qlogis  (0.000005/2),length(unique(donnee$Bobs$source))-1) #autres indices utilis\U{00E9}s
+  par$transRapportQrecru <- rep(stats::qlogis (1/2), length(unique(donnee$Robs$source))) #utiliser le rapport avec le q utilis\U{00E9} pour la biomasse minimale chalutable
+  par$transTauxExp <- rep(stats::qlogis ((0.1-0.001)/0.9), length(annees)) #captures divis\U{00E9} par biomasse
   par$logBpred <- rep(log(2e7), length(annees)+1)
   par$logRpred <- rep(log(1e6), length(annees))
   ## par$logB0 <- par$logBpred[1]
-  par$logN0 <- log(exp(par$logBpred[1])/quantile(donnee$omega$valeur, probs=0.25))
+  par$logN0 <- log(exp(par$logBpred[1])/stats::quantile(donnee$omega$valeur, probs=0.25))
   ## par$transOmega0 <- 0
   ##
   ## poids-longueur

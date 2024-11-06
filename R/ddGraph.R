@@ -58,7 +58,7 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
     }
   }
   ## graphics::abline(v=2010-0.5)
-  graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='A', cex=1.5)
+  graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='A', cex=1.5)
   ##
   ##
   if(residus){

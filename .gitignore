@@ -4,5 +4,4 @@
 .httr-oauth
 .DS_Store
 .quarto
-dd-index.Rmd
 dd-input.RData

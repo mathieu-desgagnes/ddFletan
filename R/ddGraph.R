@@ -67,7 +67,7 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
          log(subset(donnee$Bobs, source==1)$valeur/objReport$qRel[1])-
            (log(objReport$Bpred)[subset(donnee$Bobs, source==1)$annee+1]),
          type='n', xlim=range(donnee$anneesFittees)+c(0,nbAnProj), ylim=ylimLog, xlab=labAn, ylab=labRes)
-    Bres.ylim <- graphics::graphics::par('usr')[3:4]
+    Bres.ylim <- graphics::par('usr')[3:4]
     graphics::abline(h=0, col='grey')
     for(i in unique(donnee$Bobs$source)){
       temp <- subset(donnee$Bobs, source==i)
@@ -84,7 +84,7 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
       }
     }
     ## graphics::abline(v=2010-0.5-0.4)
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='B', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='B', cex=1.5)
     ##
     ## Erreur de processus sur B
     ## pour am\U{00E9}liorer, consulter la formation Halifax2024 par Anders Nielsen
@@ -99,7 +99,7 @@ graph.B <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
       graphics::lines(rep(donnee$anneesFittees[i],2), c(0,log(objReport$Bpred[i+1])-log(objReport$Bpred.proc[i]))/exp(fit$par[which(names(fit$par)=='logSigma_Bproc')]), lwd=2, col=7)
       graphics::points(donnee$anneesFittees[i], (log(objReport$Bpred[i+1])-log(objReport$Bpred.proc[i]))/exp(fit$par[which(names(fit$par)=='logSigma_Bproc')]), pch=21, bg=7)
     }
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='C', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='C', cex=1.5)
     ## graphics::axis(3, at=donnee$anneesFittees, labels=round((objReport$Bpred.proc-utils::tail(objReport$Bpred,-1))/utils::tail(objReport$Bpred,-1)*100), cex.axis=0.6)
   }
 }
@@ -141,7 +141,7 @@ graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
             lty=2)
     }
   }
-  graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='A', cex=1.5)
+  graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='A', cex=1.5)
   ##
   if(length(pl)>0){
     graphics::lines(donnee$anneesFittees, exp(pl$logRpred+2*plsd$logRpred)/1000, lty=2, col=2)
@@ -165,7 +165,7 @@ graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
                pch=21, bg=i+1)
       }
     }
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='B', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='B', cex=1.5)
     ##
     ## proportion de recures R/N
     plot(donnee$anneesFittees, objReport$Rpred/objReport$Npred, type='l', xlim=range(donnee$anneesFittees)+c(0,nbAnProj), ylim=c(0,0.5),
@@ -173,7 +173,7 @@ graph.R <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
     graphics::lines(donnee$anneesFittees, objReport$Rpred*donnee$omegaK$valeur/utils::tail(objReport$Bpred,-1), col=2)
     graphics::abline(h=0, col='grey')
     graphics::legend('topright', inset=0.03, legend=c('R/N','R/B'), col=c(1,2), lty=1)
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='C', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='C', cex=1.5)
     if(nbAnProj > 0){
       for(i in seq_along(tacProj)){
         graphics::points(max(donnee$anneesFittees)+seq(1,by=1,length.out=length(valProj[[i]]$Rproj)), valProj[[i]]$Rproj/valProj[[i]]$Nproj, pch=i, col=1)
@@ -239,8 +239,8 @@ graph.omega <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, 
     temp <- subset(donnee$omega, source==i)
     graphics::points(donnee$anneesFittees[temp$annee], temp$valeur, pch=16, col=i+1)
   }
-  graphics::axis(4, at=as.numeric(donnee$lpAlpha)*pretty((graphics::graphics::par('usr')[3:4]/as.numeric(donnee$lpAlpha)) ^ (1/as.numeric(donnee$lpBeta)))^as.numeric(donnee$lpBeta),
-       labels=pretty((graphics::graphics::par('usr')[3:4]/as.numeric(donnee$lpAlpha)) ^ (1/as.numeric(donnee$lpBeta))))
+  graphics::axis(4, at=as.numeric(donnee$lpAlpha)*pretty((graphics::par('usr')[3:4]/as.numeric(donnee$lpAlpha)) ^ (1/as.numeric(donnee$lpBeta)))^as.numeric(donnee$lpBeta),
+       labels=pretty((graphics::par('usr')[3:4]/as.numeric(donnee$lpAlpha)) ^ (1/as.numeric(donnee$lpBeta))))
   if(nbAnProj > 0){
     for(i in seq_along(tacProj)){
       graphics::points(max(donnee$anneesFittees)+seq(1,by=1,length.out=length(valProj[[i]]$Rproj)), valProj[[i]]$Bproj/valProj[[i]]$Nproj, pch=i, col=1)
@@ -249,7 +249,7 @@ graph.omega <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, 
     }
   }
   graphics::legend('topleft', inset=0.03, legend=c('\U{00E9}chantillonneur \U{00E0} quai','Observateur en mer','Mod\U{00E9}lis\U{00E9}'), lty=c(NA,NA,1), pch=c(16,16,NA), col=c(2,3,1))
-  graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='A', cex=1.5)
+  graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='A', cex=1.5)
   ##
   ## residuels
   if(residus){
@@ -277,7 +277,7 @@ graph.omega <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, 
         ## graphics::points(donnee$anneesFittees[annee]+c(-0.2,0,0.2)[i], (log(temp[j,'valeur'])-log(objReport$omegaPred[annee])), pch=16, col=i+1)
       }
     }
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='B', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='B', cex=1.5)
   }
 }
 ##
@@ -348,7 +348,7 @@ graph.C <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
   if(!is.null(msyVal)){
     graphics::legend('topleft', legend=paste(c('msy='), c(round(msyVal$C/1000))))
   }
-  graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='A', cex=1.5)
+  graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='A', cex=1.5)
   ##
 }
 ##
@@ -403,7 +403,7 @@ graph.F <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fPro
     }
   }
   graphics::lines(donnee$anneesFittees, objReport$F)
-  graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='B', cex=1.5)
+  graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='B', cex=1.5)
 }
 ##
 graph.retourTag <- function(donnee, param, objReport=NULL, msyVal=NULL, tacProj=NA, fProj=NA, valProj=NULL, langue=c('fr','en','bil'), residus=TRUE){
@@ -497,8 +497,8 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
          ## subset(donnee$Robs,source==1 & annee%in%(annees+donnee$lagBH))[,'valeur'] / objReport$qRecru[1],
          ## subset(donnee$Robs,source==2 & annee%in%(annees+donnee$lagBH))[,'valeur'] / objReport$qRecru[2])),
          pch=21, bg=2, xlab=labB85, ylab=labRecru, axes=FALSE); graphics::box()
-    graphics::axis(1, at=pretty(graphics::graphics::par('usr')[1:2]), labels=pretty(graphics::graphics::par('usr')[1:2])/1000000)
-    graphics::axis(2, at=pretty(graphics::graphics::par('usr')[3:4]), labels=pretty(graphics::graphics::par('usr')[3:4])/1000)
+    graphics::axis(1, at=pretty(graphics::par('usr')[1:2]), labels=pretty(graphics::par('usr')[1:2])/1000000)
+    graphics::axis(2, at=pretty(graphics::par('usr')[3:4]), labels=pretty(graphics::par('usr')[3:4])/1000)
     graphics::rug(utils::tail(objReport$Bpred,donnee$lagBH)); graphics::rug(utils::head(objReport$Rpred,donnee$lagBH), side=2)
     ## for(i in (donnee$lagBH+1):length(objReport$Rpred)){
     ##     graphics::points(objReport$Bpred[i-donnee$lagBH], objReport$Rbh[i-donnee$lagBH])
@@ -524,7 +524,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
     ##
     ##
     ## eq <- substitute('R'==a%*%'B85+'/(b+'B85+'),list(a = round(alphaBH), b = round(betaBH)))
-    ## graphics::text(0.5*graphics::graphics::par('usr')[2],0.9*graphics::graphics::par('usr')[4],labels=eq)
+    ## graphics::text(0.5*graphics::par('usr')[2],0.9*graphics::par('usr')[4],labels=eq)
     ##
     graphics::points(utils::head(objReport$Bpred[annees+1],-(donnee$lagBH)), utils::tail(objReport$Rpred[annees],-(donnee$lagBH)), type='o', pch=21, bg=2)
     graphics::abline(a=0, b=alphaBH/betaBH, col=4, lty=3)
@@ -534,7 +534,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
     ## print(paste('h =', round(CR/(4+CR),2)))
     ## graphics::abline(v=msyVal$B0*c(1,0.2), lty=3, col=4)
     ## graphics::abline(h=alphaBH*(msyVal$B0*c(1,0.2))/ (betaBH + msyVal$B0*c(1,0.2)), lty=3, col=4)
-    ## graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.1 + graphics::graphics::par('usr')[3], label=paste('h=', round(alphaBH*(msyVal$B0*c(1))/ (betaBH + msyVal$B0*c(1)) / alphaBH*(msyVal$B0*c(0.2))/ (betaBH + msyVal$B0*c(0.2)),2)))
+    ## graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.1 + graphics::par('usr')[3], label=paste('h=', round(alphaBH*(msyVal$B0*c(1))/ (betaBH + msyVal$B0*c(1)) / alphaBH*(msyVal$B0*c(0.2))/ (betaBH + msyVal$B0*c(0.2)),2)))
     ##
     noms <- utils::head(donnee$anneesFittees[annees],-(donnee$lagBH-1))
     noms[which(!noms %in% pretty(noms))] <- NA
@@ -543,7 +543,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
     graphics::abline(v=msyVal$B, lty=2)
     graphics::abline(v=as.numeric(msyVal$B)*c(0.4,0.8), lty=2, col=c(2,3))
     graphics::legend('bottomright', inset=0.03, legend=paste(c('alpha','beta','CR','h'), '=', c(round(c(alphaBH, betaBH)),round(c(CR,CR/(4+CR)),2))))
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='A', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='A', cex=1.5)
   }
   ##
   ## agrandi
@@ -566,8 +566,8 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
          ## subset(donnee$Robs,source==2 & annee%in%(annees+donnee$lagBH))[,'valeur'] / objReport$qRecru[2],
          ## subset(donnee$Robs,source==3 & annee%in%(annees+donnee$lagBH))[,'valeur'] / objReport$qRecru[3])),
          pch=21, bg=2, xlab=labB85, ylab=labRecru, axes=FALSE); graphics::box()
-    graphics::axis(1, at=pretty(graphics::graphics::par('usr')[1:2]), labels=pretty(graphics::graphics::par('usr')[1:2])/1000000)
-    graphics::axis(2, at=pretty(graphics::graphics::par('usr')[3:4]), labels=pretty(graphics::graphics::par('usr')[3:4])/1000)
+    graphics::axis(1, at=pretty(graphics::par('usr')[1:2]), labels=pretty(graphics::par('usr')[1:2])/1000000)
+    graphics::axis(2, at=pretty(graphics::par('usr')[3:4]), labels=pretty(graphics::par('usr')[3:4])/1000)
     graphics::rug(utils::tail(objReport$Bpred,donnee$lagBH)); graphics::rug(utils::head(objReport$Rpred,donnee$lagBH), side=2)
     ## for(i in (donnee$lagBH+1):length(objReport$Rpred)){
     ##     graphics::points(objReport$Bpred[i-donnee$lagBH], objReport$Rbh[i-donnee$lagBH])
@@ -582,7 +582,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
     ##
     ##
     eq <- substitute('R'==a%*%'B85+'/(b+'B85+'),list(a = round(alphaBH), b = round(betaBH)))
-    graphics::text(0.5*graphics::graphics::par('usr')[2],0.9*graphics::graphics::par('usr')[4],labels=eq)
+    graphics::text(0.5*graphics::par('usr')[2],0.9*graphics::par('usr')[4],labels=eq)
     ##
     graphics::points(utils::head(objReport$Bpred[annees+1],-(donnee$lagBH)), utils::tail(objReport$Rpred[annees],-(donnee$lagBH)), type='o', pch=21, bg=2)
     graphics::abline(a=0,b=alphaBH/betaBH,col=2, lty=3)
@@ -596,7 +596,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
          labels=noms, pos=3)
     graphics::abline(v=msyVal$B, lty=2)
     graphics::abline(v=as.numeric(msyVal$B)*c(0.4,0.8), lty=3, col='grey70')
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='A', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='A', cex=1.5)
   }
   ##
   if(3%in%lesquels){
@@ -630,7 +630,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
       graphics::points(donnee$anneesFittees[annees[i]], (log(Rtemp[i]) - log((alphaBH*Btemp[i] / (betaBH + Btemp[i]))))/sigmaBH,
              pch=21, bg=2)
     }
-    graphics::text(x=mean(graphics::graphics::par('usr')[c(1,2)]), y=diff(graphics::graphics::par('usr')[c(3,4)])*0.9 + graphics::graphics::par('usr')[3], label='B', cex=1.5)
+    graphics::text(x=mean(graphics::par('usr')[c(1,2)]), y=diff(graphics::par('usr')[c(3,4)])*0.9 + graphics::par('usr')[3], label='B', cex=1.5)
     ##
   }
   ##
@@ -641,7 +641,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
          type='o', pch=1, xlim=range(donnee$anneesFittees)-c(donnee$lagBH,0),
          ylim=c(0,max(Rest)),
          xlab=labAn, ylab=labRecru); graphics::abline(h=0, col='grey70')
-    graphics::polygon(donnee$anneesFittees[donnee$anneesBH[c(1,1,2,2)]]-c(0,0,donnee$lagBH-1,donnee$lagBH-1)+c(-0.5,-0.5), graphics::graphics::par('usr')[c(3,4,4,3)], col='grey90', border=NA); graphics::box()
+    graphics::polygon(donnee$anneesFittees[donnee$anneesBH[c(1,1,2,2)]]-c(0,0,donnee$lagBH-1,donnee$lagBH-1)+c(-0.5,-0.5), graphics::par('usr')[c(3,4,4,3)], col='grey90', border=NA); graphics::box()
     graphics::lines(c(min(donnee$anneesFittees)-1,donnee$anneesFittees), Rest, type='o')
     graphics::lines(donnee$anneesFittees-donnee$lagBH, objReport$Rpred, type='o', pch=1, col=2)
     graphics::legend('topleft', inset=0.03, legend=c('BH','Recrues'), col=c(1,2), pch=1, lty=1)
@@ -651,7 +651,7 @@ graph.SSR <- function(donnee, param, objReport=NULL, msyVal=NULL, bh=NULL, ylimL
     ##      type='o', pch=1, xlim=range(donnee$anneesFittees)-c(donnee$lagBH,0),
     ##      ylim=c(min(log(objReport$Rpred)),max(log(Rest))),
     ##      xlab=labAn, ylab='Log-recrues'); graphics::abline(h=0, col='grey70')
-    ## graphics::polygon(donnee$anneesFittees[donnee$anneesBH[c(1,1,2,2)]]-c(0,0,donnee$lagBH-1,donnee$lagBH-1)+c(-0.5,-0.5), graphics::graphics::par('usr')[c(3,4,4,3)], col='grey90', border=NA); graphics::box()
+    ## graphics::polygon(donnee$anneesFittees[donnee$anneesBH[c(1,1,2,2)]]-c(0,0,donnee$lagBH-1,donnee$lagBH-1)+c(-0.5,-0.5), graphics::par('usr')[c(3,4,4,3)], col='grey90', border=NA); graphics::box()
     ## graphics::lines(c(min(donnee$anneesFittees)-1,donnee$anneesFittees), log(Rest), type='o')
     ## graphics::lines(donnee$anneesFittees-donnee$lagBH, log(objReport$Rpred), type='o', pch=1, col=2)
     ## graphics::legend('topleft', inset=0.03, legend=c('BH','Recrues'), col=c(1,2), pch=1, lty=1)
@@ -722,8 +722,8 @@ graph.B.retro <- function(retro, langue=c('fr','en','bil')){
        temp$objReport$Bpred/1000/1000,
        type='l', xlim=range(temp$donnee$anneesFittees),
        ylim=c(0,max(temp$objReport$Bpred))/1000/1000,
-       xlab=labAn, ylab=labBiom, col=grDevices::grDevices::rainbow(length(retro))[1]); graphics::abline(h=0, col='grey70')
-  graphics::points(utils::tail(temp$donnee$anneesFittees,1), utils::tail(temp$objReport$Bpred/1000/1000,1), col=grDevices::grDevices::rainbow(length(retro))[1])
+       xlab=labAn, ylab=labBiom, col=grDevices::rainbow(length(retro))[1]); graphics::abline(h=0, col='grey70')
+  graphics::points(utils::tail(temp$donnee$anneesFittees,1), utils::tail(temp$objReport$Bpred/1000/1000,1), col=grDevices::rainbow(length(retro))[1])
   qrel <- temp$objReport$qRel[1]
   for(i in 2:length(retro)){
     temp <- retro[[i]]

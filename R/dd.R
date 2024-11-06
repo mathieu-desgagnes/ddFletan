@@ -1,3 +1,202 @@
+run_dd <- function(){
+  library('RTMB')
+  randomVal <- c('logRpred','logBpred')
+  ## randomVal <- c('logRpred','logBpred','transTauxExp')
+  ##
+  mapVal <- list(logSigma_C=factor(NA), logSigma_longAge=factor(NA))
+  mapVal <- list(logSigma_C=factor(NA))
+  ## mapVal <- NULL
+  ##
+  obj <- RTMB::MakeADFun(fnll, param, random=randomVal, map=mapVal)
+}
+
+fnll <- function(param, fit=TRUE){
+  getAll(param, donnee)
+  ##
+  ## Écart-type des fonctions vraissemblances
+  sigma_Bobs <- exp(logSigma_Bobs)
+  sigma_Bproc <- exp(logSigma_Bproc)
+  sigma_oBar <- exp(logSigma_oBar)
+  sigma_C <- exp(logSigma_C)
+  sigma_Rrw <- exp(logSigma_Rrw)
+  sigma_Robs <- exp(logSigma_Robs)
+  sigma_longAge <- exp(logSigma_longAge)
+  sigma_retourTag <- exp(logSigma_retourTag)
+  ##
+  Bobs <- OBS(Bobs)
+  ##
+  ## Paramètres variables dans le temps
+  Bpred <- exp(logBpred) #Bpred inclus B0, donc donc commence à l'an 0
+  Rpred <- exp(logRpred)
+  tauxExp <- 0.001 + 0.9*plogis(transTauxExp) # entre 0.001 et 0.9
+  F <- -log(1-tauxExp)
+  Z <- F+M
+  s <- exp(-M) * (1-tauxExp) #équivalent à exp(-Z)
+  ##
+  ## Paramètres invariables dans le temps
+  N0 <- exp(logN0)
+  qRel <- c(2*plogis(transQrelGSL), 2*plogis(transQrelAutre))
+  qRecru <- 2*plogis(transRapportQrecru) * qRel[1] #par rapport au q des adultes
+  ## qRecru <- rep(qRel[1],length(unique(Robs$source)))
+  linf <- exp(logLinf)
+  K <- exp(logK)
+  t0 <- -5 + 10*plogis(transT0) #entre -5 et 5
+  ##
+  ## calcul des paramètre du graphique Ford-Walford (rho et alpha), selon l'étendue des longueurs moyennes observés
+  poidsMoyMin <- min(omega$valeur)
+  ageMin <- log(1-((poidsMoyMin/lpAlpha)^(1/lpBeta))/linf) / -K + t0
+  poidsMoyMin.plus1an <- lpAlpha * (linf * (1-exp(-K * ((ageMin+1)-t0))))^lpBeta
+  ##
+  poidsMoyMax <- max(omega$valeur)
+  ageMax <- log(1-((poidsMoyMax/lpAlpha)^(1/lpBeta))/linf) / -K + t0
+  poidsMoyMax.plus1an <- lpAlpha * (linf * (1-exp(-K * ((ageMax+1)-t0))))^lpBeta
+  ##
+  rho <- (poidsMoyMax.plus1an - poidsMoyMin.plus1an) / (poidsMoyMax - poidsMoyMin)
+  alpha <- poidsMoyMin.plus1an - poidsMoyMin*rho
+  ## winf <- lpAlpha * (linf)^lpBeta
+  ## rho <- (poidsMoyMin.plus1an - winf) / (poidsMoyMin - winf)
+  ## alpha <- winf*(1 - rho)
+  ##
+  ## Initialisation à l'an 1
+  Bpred.proc <- s[1] * alpha * N0 +
+    s[1] * rho * Bpred[1] + #Bpred commence à l'an 0
+    omegaK[1,'valeur'] * Rpred[1]
+  Npred <- s[1] * N0 + Rpred[1]
+  Cpred <- tauxExp[1] * Bpred[1] * exp(-M) #pêche après mortalité naturelle
+  ##
+  ## Progression annuelle
+  for(i in 2:(length(Bpred)-1)){
+    Bpred.proc[i] <- s[i] * alpha * Npred[i-1] +
+      s[i] * rho * Bpred[i] +
+      omegaK[i,'valeur'] * Rpred[i]
+    Npred[i] <- s[i] * Npred[i-1] + Rpred[i]
+    Cpred[i] <- tauxExp[i] * Bpred[i] * exp(-M) #pêche après mortalité naturelle
+    if(i==a2010){ # ajuster la biomasse pour le changement de taille légale en 2010
+      Bpred.proc[i] <- Bpred.proc[i] * drop2010
+      ## soustraction du nombre de poisson en moins, selon la biomasse soustraite et le poids moyen à cette taille
+      Npred[i] <- Npred[i] - Bpred.proc[i] * (1-drop2010) / poidsMoy81a85
+    }
+  }
+  omegaPred <- tail(Bpred,-1)/Npred
+  ##
+  ## suivi des tags présents dans l'eau et recapturés
+  nTag <- matrix(nrow=length(Bpred)-1, ncol=length(Bpred)-1)
+  nTagRetourPred <- matrix(NA, nrow=length(Bpred)-1, ncol=length(Bpred)-1) #pas de captures l'année de marquage
+  for(i in 1:(nrow(nTag)-1)){
+    nTag[i,i] <- nTagsPoses$valeur[i] * sPostMarquage
+    for(j in (i+1):ncol(nTag)){ #remplir le triangle supérieur
+      nTag.temp <- nTag[i,j-1] * (1-perteTag[j-1,'perteAnnuelle2tag'])
+      nTag[i,j] <- nTag.temp * s[j]
+      nTagRetourPred[i,j] <- nTag.temp * exp(-M) * tauxExp[j] * tauxRetour
+    }
+  }
+  nTag[nrow(nTag),ncol(nTag)] <- nTagsPoses$valeur[nrow(nTag)] * sPostMarquage
+  ##
+  ##
+  ## erreur de processus sur la biomasse, retirer le premier Bpred
+  nll.Bproc <- -sum(dnorm(tail(logBpred,-1), log(Bpred.proc), sigma_Bproc, log=TRUE), na.rm=TRUE)
+  ##
+  ## marche aléatoire walk du recrutement
+  nll.recru <- -sum(dnorm(log(Rpred[-length(Rpred)]), log(Rpred[-1]), sigma_Rrw, log=TRUE), na.rm=TRUE)
+  ##
+  ## erreur d'ajustement de la longueur à l'age
+  nll.longAge <- -sum(dnorm(croiss$longueur, linf*(1-exp(-K*(croiss$age-t0))), sigma_longAge, log=TRUE), na.rm=TRUE)
+  ##
+  ## erreur d'observation sur les captures
+  nll.Cobs <- -sum(dnorm(log(Cobs[,'valeur']), log(Cpred), sigma_C, log=TRUE), na.rm=TRUE)
+  ##
+  ## erreur d'observation sur les indices d'abondance
+  nll.Bobs <- 0
+  for(i in 1:nrow(Bobs)){
+    if(is.finite(log(Bobs[i,2]))){
+      annee <- Bobs[i,1]
+      source <- Bobs[i,3]
+      sigma <- Bobs[i,4]
+      nll.Bobs <- nll.Bobs - dnorm(log(Bobs[i,2]), log(Bpred[annee+1]*qRel[source]), sigma_Bobs[sigma], log=TRUE)
+    }
+  }
+  ##
+  ## erreur d'observation sur les indices de recrutement
+  nll.Robs <- 0
+  for(i in 1:nrow(Robs)){
+    if(is.finite(log(Robs[i,2]))){
+      annee <- Robs[i,1]
+      source <- Robs[i,3]
+      sigma <- Robs[i,4]
+      nll.Robs <- nll.Robs - dnorm(log(Robs[i,2]), log(Rpred[annee]*qRecru[source]), sigma_Robs[sigma], log=TRUE)
+    }
+  }
+  ##
+  ## erreur d'observation sur les poids moyens
+  nll.oBar <- 0
+  for(i in 1:nrow(omega)){
+    if(is.finite(log(omega[i,2]))){
+      annee <- omega[i,1]
+      source <- omega[i,3]
+      sigma <- omega[i,4]
+      ## nll.oBar <- nll.oBar - dnorm(log(omega[i,2]), log(omegaPred[annee]), sigma_oBar[sigma], log=TRUE)
+      nll.oBar <- nll.oBar - dnorm(omega[i,2], omegaPred[annee], sigma_oBar[sigma], log=TRUE)
+    }
+  }
+  ##
+  ## erreur d'observation sur les retours d'étiquettes
+  nll.tag <- 0
+  for(i in 1:nrow(nTagsRetourObs)){
+    anPose <- nTagsRetourObs[i,'anneePose']
+    anRecap <- nTagsRetourObs[i,'anneeRecap']
+    source <- nTagsRetourObs[i,'source']
+    nll.tag <- nll.tag - dnorm(nTagRetourPred[anPose,anRecap], nTagsRetourObs[i,'valeur'], sigma_retourTag[source], log=TRUE)
+  }
+  ##
+  ## vraissemblance totale
+  nll <- nll.Bproc +
+    nll.recru +
+    nll.longAge +
+    nll.Cobs +
+    nll.Bobs +
+    nll.Robs +
+    nll.oBar +
+    nll.tag
+  ##
+  ##
+  ## sorties
+  REPORT(nll.Bproc)
+  REPORT(nll.recru)
+  REPORT(nll.Robs)
+  REPORT(nll.Bobs)
+  REPORT(nll.oBar)
+  REPORT(nll.Cobs)
+  REPORT(nll.longAge)
+  REPORT(nll.tag)
+  REPORT(N0)
+  REPORT(Bpred)
+  REPORT(Bpred.proc)
+  REPORT(Npred)
+  REPORT(Rpred)
+  REPORT(s)
+  REPORT(tauxExp)
+  REPORT(qRel)
+  REPORT(qRecru)
+  REPORT(Cpred)
+  REPORT(omegaPred)
+  REPORT(rho)
+  REPORT(alpha)
+  REPORT(M)
+  REPORT(F)
+  REPORT(Z)
+  REPORT(linf)
+  REPORT(K)
+  REPORT(t0)
+  REPORT(nTag)
+  REPORT(nTagRetourPred)
+  REPORT(tauxRetour)
+  REPORT(sPostMarquage)
+  ##
+  REPORT(nll)
+  ##
+  return(nll)
+}
+
 calculerDonnee <- function(donneeInit, annees, valM=0.15, valTR=0.8, Rmin=3000, anOmega.min=1998, doublerC=FALSE, RobsSigma.unique=FALSE,
                            omegaSigma.unique=FALSE) {
   d <- donneeInit
